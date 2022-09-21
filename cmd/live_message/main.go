@@ -11,9 +11,8 @@ import (
 )
 
 func main() {
-	logging.LogLevel()
 	uid := uint64(0)
-	roomID := uint64(25366645)
+	roomID := uint64(545068)
 
 	client := &http.Client{}
 	info, err := live_room.GetDanmuInfo(client, roomID)

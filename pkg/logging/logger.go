@@ -61,7 +61,7 @@ func init() {
 		}
 	} else {
 		cfg := zap.NewDevelopmentConfig()
-		//cfg.Level = zap.NewAtomicLevelAt(defaultLoggingLevel)
+		cfg.Level = zap.NewAtomicLevelAt(FatalLevel)
 		cfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 		zapLogger, _ := cfg.Build()
 		defaultLogger = zapLogger.Sugar()
