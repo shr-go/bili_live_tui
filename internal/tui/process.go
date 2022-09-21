@@ -17,10 +17,13 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 	rawUserInfo := msg.Info[2].([]interface{})
 	rawMedalInfo := msg.Info[3].([]interface{})
 
-	medal := medalInfo{}
-	if len(rawMedalInfo) >= 2 {
+	var medal *medalInfo
+	if len(rawMedalInfo) > 10 {
+		medal = new(medalInfo)
 		medal.level = uint8(rawMedalInfo[0].(float64))
+		medal.shipLevel = uint8(rawMedalInfo[10].(float64))
 		medal.name = rawMedalInfo[1].(string)
+		medal.medalColor = fmt.Sprintf("#%06X", int64(rawMedalInfo[7].(float64)))
 	}
 	danmu = &danmuMsg{
 		uid:          uint64(rawUserInfo[0].(float64)),
@@ -29,7 +32,7 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 		content:      content,
 		medal:        medal,
 		nameColor:    rawUserInfo[7].(string),
-		contentColor: fmt.Sprintf("#%X", int64(rawBasicInfo[3].(float64))),
+		contentColor: fmt.Sprintf("#%06X", int64(rawBasicInfo[3].(float64))),
 	}
 	return
 }

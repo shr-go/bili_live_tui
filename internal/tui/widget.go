@@ -2,6 +2,55 @@ package tui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"strconv"
+)
+
+var (
+	shipLevelToString = map[uint8]string{
+		0: "",
+		1: "总",
+		2: "提",
+		3: "舰",
+	}
+	medalStyle = func(medal *medalInfo) string {
+		shipString := shipLevelToString[medal.shipLevel]
+		if shipString != "" {
+			shipString = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#F87299")).
+				Render(shipString)
+		}
+		nameString := lipgloss.NewStyle().
+			MaxWidth(10).
+			Align(lipgloss.Center).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			Background(lipgloss.Color(medal.medalColor)).
+			Render(medal.name)
+		levelString := lipgloss.NewStyle().
+			Width(2).
+			Align(lipgloss.Right).
+			Foreground(lipgloss.Color("#3C3C3C")).
+			Background(lipgloss.Color("#FAFAFA")).
+			Render(strconv.Itoa(int(medal.level)))
+		return shipString + nameString + levelString
+	}
+
+	nameStyle = func(name string, nameColor string) string {
+		if nameColor == "" {
+			nameColor = "#FAFAFA"
+		}
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color(nameColor)).
+			Render(name + ":")
+	}
+
+	contentStyle = func(content string, contentColor string) string {
+		if contentColor == "" {
+			contentColor = "#FAFAFA"
+		}
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color(contentColor)).
+			Render(content)
+	}
 )
 
 var (

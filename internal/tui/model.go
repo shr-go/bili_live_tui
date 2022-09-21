@@ -4,14 +4,17 @@ import (
 	"container/list"
 	"fmt"
 	"github.com/shr-go/bili_live_tui/api"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type medalInfo struct {
-	level uint8
-	name  string
+	level      uint8
+	shipLevel  uint8
+	name       string
+	medalColor string
 }
 
 type danmuMsg struct {
@@ -19,7 +22,7 @@ type danmuMsg struct {
 	uName        string
 	chatTime     time.Time
 	content      string
-	medal        medalInfo
+	medal        *medalInfo
 	nameColor    string
 	contentColor string
 }
@@ -58,14 +61,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Chat Content - %d - %d\n\n", m.room.RoomID, m.room.Hot)
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("Chat Content - %d - %d\n\n", m.room.RoomID, m.room.Hot))
 	for danmuElem := m.danmu.Front(); danmuElem != nil; danmuElem = danmuElem.Next() {
 		danmu, ok := danmuElem.Value.(*danmuMsg)
 		if ok {
-			s += fmt.Sprintf("> [%s] %s\n", danmu.uName, danmu.content)
+			if danmu.medal != nil {
+				sb.WriteString(medalStyle(danmu.medal))
+				sb.WriteRune(' ')
+			}
+			sb.WriteString(fmt.Sprintln(nameStyle(danmu.uName, danmu.nameColor),
+				contentStyle(danmu.content, danmu.contentColor)))
 		}
 	}
-	return s
+	return sb.String()
 }
 
 func ReceiveMsg(program *tea.Program, room *api.LiveRoom) {
