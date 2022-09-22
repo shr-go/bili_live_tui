@@ -6,28 +6,17 @@ import (
 	"github.com/shr-go/bili_live_tui/internal/live_room"
 	"github.com/shr-go/bili_live_tui/internal/tui"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
-	"net/http"
 	"os"
 )
 
 func main() {
-	uid := uint64(0)
-	roomID := uint64(545068)
-
-	client := &http.Client{}
-	info, err := live_room.GetDanmuInfo(client, roomID)
-
+	room, err := live_room.AuthAndConnect(545068)
 	if err != nil {
-		logging.Fatalf("GetDanmuInfo Error, %v", err)
+		logging.Fatalf("Connect server error, err=%v", err)
 	}
-
-	room, err := live_room.ConnectDanmuServer(uid, roomID, info)
-	if err != nil {
-		logging.Fatalf("ConnectDanmuServer Error, %v", err)
-	}
-
-	p := tea.NewProgram(tui.InitialModel(room))
+	p := tea.NewProgram(tui.InitialModel(room), tea.WithAltScreen(), tea.WithMouseCellMotion())
 	go tui.ReceiveMsg(p, room)
+	go tui.PoolWindowSize(p)
 	if err := p.Start(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)

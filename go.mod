@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/andybalholm/brotli v1.0.4
+	github.com/charmbracelet/bubbles v0.14.0
 	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/google/go-querystring v1.1.0
