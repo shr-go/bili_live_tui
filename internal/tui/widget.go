@@ -188,4 +188,11 @@ var (
 	// Page.
 
 	docStyle = lipgloss.NewStyle().Padding(1, 2, 1, 2)
+
+	focusedStyle = lipgloss.NewStyle().
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("69"))
+
+	unFocusedStyle = lipgloss.NewStyle().
+			BorderStyle(lipgloss.HiddenBorder())
 )

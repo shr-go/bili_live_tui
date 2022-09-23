@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	room, err := live_room.AuthAndConnect(545068)
+	room, err := live_room.AuthAndConnect(25299836)
 	if err != nil {
 		logging.Fatalf("Connect server error, err=%v", err)
 	}

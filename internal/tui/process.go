@@ -23,7 +23,7 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 		medal.level = uint8(rawMedalInfo[0].(float64))
 		medal.shipLevel = uint8(rawMedalInfo[10].(float64))
 		medal.name = rawMedalInfo[1].(string)
-		medal.medalColor = fmt.Sprintf("#%06X", int64(rawMedalInfo[7].(float64)))
+		medal.medalColor = fmt.Sprintf("#%06X", int64(rawMedalInfo[3].(float64)))
 	}
 	danmu = &danmuMsg{
 		uid:          uint64(rawUserInfo[0].(float64)),
@@ -35,4 +35,17 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 		contentColor: fmt.Sprintf("#%06X", int64(rawBasicInfo[3].(float64))),
 	}
 	return
+}
+
+func generateFakeDanmuMsg(content string) (danmu *danmuMsg) {
+	danmu = &danmuMsg{
+		uid:          10000,
+		uName:        "测试弹幕机器人",
+		chatTime:     time.Now(),
+		content:      content,
+		medal:        nil,
+		nameColor:    "",
+		contentColor: "",
+	}
+	return danmu
 }
