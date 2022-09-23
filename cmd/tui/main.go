@@ -1,16 +1,20 @@
 package main
 
 import (
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/shr-go/bili_live_tui/internal/live_room"
 	"github.com/shr-go/bili_live_tui/internal/tui"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
+	"net/http"
 	"os"
 )
 
 func main() {
-	room, err := live_room.AuthAndConnect(25299836)
+	client := &http.Client{}
+	if !tui.LoadCookie(client) {
+		logging.Fatalf("Cookie check failed")
+	}
+	room, err := live_room.AuthAndConnect(client, 7570705)
 	if err != nil {
 		logging.Fatalf("Connect server error, err=%v", err)
 	}
@@ -18,7 +22,7 @@ func main() {
 	go tui.ReceiveMsg(p, room)
 	go tui.PoolWindowSize(p)
 	if err := p.Start(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
+		logging.Fatalf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }

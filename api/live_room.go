@@ -5,16 +5,17 @@ import (
 )
 
 type LiveRoom struct {
-	UID         uint64
-	RoomID      uint64
-	Hot         uint32
-	Seq         uint32
-	MessageChan chan *DanmuMessage
-	ReqChan     chan []byte
-	DoneChan    chan struct{}
-	Client      net.Conn
-	Title       string
-	ShortID     uint64
+	UID          uint64
+	RoomID       uint64
+	Hot          uint32
+	Seq          uint32
+	MessageChan  chan *DanmuMessage
+	ReqChan      chan []byte
+	DoneChan     chan struct{}
+	Client       net.Conn
+	Title        string
+	ShortID      uint64
+	RoomUserInfo UserRoomProperty
 }
 
 type DanmuInfoReq struct {
@@ -167,4 +168,73 @@ type DanmuMessage struct {
 	Cmd  string                 `json:"cmd"`
 	Info []interface{}          `json:"info"`
 	Data map[string]interface{} `json:"data"`
+}
+
+type QRCodeGenerateResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Ttl     int    `json:"ttl"`
+	Data    struct {
+		Url       string `json:"url"`
+		QrcodeKey string `json:"qrcode_key"`
+	} `json:"data"`
+}
+
+type QRLoginStatus uint32
+
+const (
+	QRLoginSuccess    QRLoginStatus = 0
+	QRLoginNotConfirm QRLoginStatus = 86090
+	QRLoginNotScan    QRLoginStatus = 86101
+	QRLoginExpired    QRLoginStatus = 86038
+)
+
+type QRCodeLoginData struct {
+	QRString string
+	QRKey    string
+	Status   QRLoginStatus
+}
+
+type PollLoginResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Ttl     int    `json:"ttl"`
+	Data    struct {
+		Url          string        `json:"url"`
+		RefreshToken string        `json:"refresh_token"`
+		Timestamp    int64         `json:"timestamp"`
+		Code         QRLoginStatus `json:"code"`
+		Message      string        `json:"message"`
+	} `json:"data"`
+}
+
+type UserInfo struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Ttl     int    `json:"ttl"`
+	Data    struct {
+		Mid   uint64 `json:"mid"`
+		Uname string `json:"uname"`
+	} `json:"data"`
+}
+
+type UserRoomInfo struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Ttl     int    `json:"ttl"`
+	Data    struct {
+		Property UserRoomProperty `json:"property"`
+	} `json:"data"`
+}
+
+type UserRoomProperty struct {
+	UnameColor string `json:"uname_color"`
+	Bubble     int    `json:"bubble"`
+	Danmu      struct {
+		Mode   int `json:"mode"`
+		Color  int `json:"color"`
+		Length int `json:"length"`
+		RoomId int `json:"room_id"`
+	} `json:"danmu"`
+	BubbleColor string `json:"bubble_color"`
 }

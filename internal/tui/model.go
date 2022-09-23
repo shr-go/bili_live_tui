@@ -235,10 +235,6 @@ func (m model) headerView() string {
 }
 
 func (m model) footerView() string {
-	//b := lipgloss.RoundedBorder()
-	//b.Left = "┤"
-	//info := lipgloss.NewStyle().BorderStyle(b).
-	//	Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	info := lipgloss.NewStyle().Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(info)))
 	return lipgloss.JoinHorizontal(lipgloss.Center, line, info)
@@ -262,11 +258,4 @@ func (m model) renderDanmu() string {
 		}
 	}
 	return sb.String()
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }

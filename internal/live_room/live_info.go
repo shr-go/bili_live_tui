@@ -38,3 +38,32 @@ func GetRoomInfo(client *http.Client, roomID uint64) (info *api.RoomInfoResp, er
 	info = roomInfoResp
 	return
 }
+
+func GetUserRoomInfo(client *http.Client, roomID uint64) (info *api.UserRoomInfo, err error) {
+	roomInfoReq := api.RoomInfoReq{RoomID: roomID}
+	v, err := query.Values(roomInfoReq)
+	if err != nil {
+		return
+	}
+	baseURL := "https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByUser"
+	realUrl := fmt.Sprintf("%s?%s", baseURL, v.Encode())
+	resp, err := client.Get(realUrl)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	userRoomInfo := new(api.UserRoomInfo)
+	err = json.Unmarshal(body, userRoomInfo)
+	if err != nil {
+		return
+	}
+	if userRoomInfo.Code != 0 {
+		err = errors.New(userRoomInfo.Message)
+	}
+	info = userRoomInfo
+	return
+}

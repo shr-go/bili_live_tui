@@ -64,7 +64,7 @@ var (
 		Foreground(subtle).
 		String()
 
-	url = lipgloss.NewStyle().Foreground(special).Render
+	urlStyle = lipgloss.NewStyle().Foreground(special).Render
 
 	activeTabBorder = lipgloss.Border{
 		Top:         "─",

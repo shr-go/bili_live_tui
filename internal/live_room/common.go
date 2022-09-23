@@ -5,10 +5,11 @@ import (
 	"net/http"
 )
 
-func AuthAndConnect(roomID uint64) (room *api.LiveRoom, err error) {
-	//fixme set user id
+func AuthAndConnect(client *http.Client, roomID uint64) (room *api.LiveRoom, err error) {
 	uid := uint64(0)
-	client := &http.Client{}
+	if userInfo := GetUserInfo(client); userInfo != nil {
+		uid = userInfo.Data.Mid
+	}
 	roomInfo, err := GetRoomInfo(client, roomID)
 	if err != nil {
 		return
@@ -22,7 +23,12 @@ func AuthAndConnect(roomID uint64) (room *api.LiveRoom, err error) {
 	if err != nil {
 		return
 	}
+	userRoomInfo, err := GetUserRoomInfo(client, realRoomID)
+	if err != nil {
+		return
+	}
 	room.Title = roomInfo.Data.Title
 	room.ShortID = uint64(roomInfo.Data.ShortId)
+	room.RoomUserInfo = userRoomInfo.Data.Property
 	return
 }
