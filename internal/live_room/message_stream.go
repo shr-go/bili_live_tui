@@ -236,7 +236,7 @@ func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (roo
 		MessageChan: make(chan *api.DanmuMessage, 10),
 		ReqChan:     make(chan []byte, 10),
 		DoneChan:    make(chan struct{}),
-		Client:      conn,
+		StreamConn:  conn,
 	}
 
 	// process write
@@ -269,7 +269,7 @@ Loop:
 			for dataList.Len() > 0 {
 				preData := dataList.Front().Value.([]byte)
 				// todo Add timeout settings
-				if _, err := room.Client.Write(preData); err != nil {
+				if _, err := room.StreamConn.Write(preData); err != nil {
 					if err == io.EOF {
 						logging.Errorf("connection close from write")
 						close(room.DoneChan)
@@ -282,7 +282,7 @@ Loop:
 				}
 			}
 			if dataList.Len() == 0 {
-				_, err := room.Client.Write(data)
+				_, err := room.StreamConn.Write(data)
 				if err == nil {
 					continue
 				}
@@ -305,7 +305,7 @@ Loop:
 		default:
 			data := make([]byte, 64*1024)
 			// todo Add timeout settings
-			n, err := room.Client.Read(data)
+			n, err := room.StreamConn.Read(data)
 			if err == io.EOF {
 				logging.Errorf("connection close from read")
 				break Loop

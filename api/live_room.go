@@ -2,6 +2,7 @@ package api
 
 import (
 	"net"
+	"net/http"
 )
 
 type LiveRoom struct {
@@ -12,10 +13,12 @@ type LiveRoom struct {
 	MessageChan  chan *DanmuMessage
 	ReqChan      chan []byte
 	DoneChan     chan struct{}
-	Client       net.Conn
+	StreamConn   net.Conn
 	Title        string
 	ShortID      uint64
 	RoomUserInfo UserRoomProperty
+	Client       *http.Client
+	CSRF         string
 }
 
 type DanmuInfoReq struct {
@@ -237,4 +240,16 @@ type UserRoomProperty struct {
 		RoomId int `json:"room_id"`
 	} `json:"danmu"`
 	BubbleColor string `json:"bubble_color"`
+}
+
+type SendMsgReq struct {
+	Bubble    int    `url:"bubble"`
+	Msg       string `url:"msg"`
+	Color     int    `url:"color"`
+	Mode      int    `url:"mode"`
+	Fontsize  int    `url:"fontsize"`
+	Rnd       int64  `url:"rnd"`
+	RoomID    uint64 `url:"roomid"`
+	CSRF      string `url:"csrf"`
+	CSRFToken string `url:"csrf_token"`
 }

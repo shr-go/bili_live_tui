@@ -127,7 +127,7 @@ func CheckCookieValid(client *http.Client, cookie string) bool {
 }
 
 func GetUserInfo(client *http.Client) *api.UserInfo {
-	baseURL := "http://api.bilibili.com/x/web-interface/nav"
+	baseURL := "https://api.bilibili.com/x/web-interface/nav"
 	resp, err := client.Get(baseURL)
 	if err != nil {
 		return nil
@@ -142,4 +142,15 @@ func GetUserInfo(client *http.Client) *api.UserInfo {
 		return nil
 	}
 	return &userInfo
+}
+
+func getCSRF(client *http.Client) string {
+	u, _ := url.Parse("https://bilibili.com")
+	cookies := client.Jar.Cookies(u)
+	for _, cookie := range cookies {
+		if cookie.Name == "bili_jct" {
+			return cookie.Value
+		}
+	}
+	return ""
 }

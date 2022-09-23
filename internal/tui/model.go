@@ -2,11 +2,14 @@ package tui
 
 import (
 	"container/list"
+	"encoding/json"
 	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/shr-go/bili_live_tui/api"
+	"github.com/shr-go/bili_live_tui/pkg/logging"
 	"golang.org/x/term"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -42,10 +45,6 @@ type danmuMsg struct {
 	contentColor string
 }
 
-type sendContentMsg struct {
-	content string
-}
-
 type model struct {
 	danmu      *list.List
 	room       *api.LiveRoom
@@ -71,11 +70,24 @@ func InitialModel(room *api.LiveRoom) model {
 	}
 }
 
-func (m model) sendContentHelper(needSend string) tea.Cmd {
+func (m model) sendDanmu(needSend string) tea.Cmd {
+	danmu := generateDanmuMsg(needSend, m.room)
 	return func() tea.Msg {
-		return sendContentMsg{
-			content: needSend,
+		contentType, form := packDanmuMsgForm(danmu)
+		baseURL := "https://api.live.bilibili.com/msg/send"
+		resp, err := m.room.Client.Post(baseURL, contentType, form)
+		if err != nil {
+			logging.Errorf("Send Danmu failed, err=%v", err)
+			return nil
 		}
+		defer resp.Body.Close()
+		respBody, err := ioutil.ReadAll(resp.Body)
+		var data map[string]interface{}
+		if err = json.Unmarshal(respBody, &data); err != nil || data["code"] != 0 {
+			logging.Errorf("Send Danmu failed, err=%v, data=%v", err, data)
+			return nil
+		}
+		return nil
 	}
 }
 
@@ -107,7 +119,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				needSend := m.textInput.Value()
 				m.textInput.Reset()
 				if len(needSend) > 0 {
-					cmd = m.sendContentHelper(needSend)
+					cmd = m.sendDanmu(needSend)
 					cmds = append(cmds, cmd)
 				}
 			}
@@ -133,18 +145,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.textInput.Width = textWieth
 	case *danmuMsg:
 		m.danmu.PushBack(msg)
-		//fixme use config to replace hard code
-		for m.danmu.Len() > 200 {
-			m.danmu.Remove(m.danmu.Front())
-		}
-		if m.ready {
-			m.viewport.SetContent(m.renderDanmu())
-		}
-	case sendContentMsg:
-		danmu := generateFakeDanmuMsg(msg.content)
-		m.danmu.PushBack(danmu)
-		//fixme use config to replace hard code
-		for m.danmu.Len() > 200 {
+		for m.danmu.Len() > LiveConfig.ChatBuffer {
 			m.danmu.Remove(m.danmu.Front())
 		}
 		if m.ready {

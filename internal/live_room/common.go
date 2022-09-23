@@ -30,5 +30,8 @@ func AuthAndConnect(client *http.Client, roomID uint64) (room *api.LiveRoom, err
 	room.Title = roomInfo.Data.Title
 	room.ShortID = uint64(roomInfo.Data.ShortId)
 	room.RoomUserInfo = userRoomInfo.Data.Property
+	room.Client = client
+	room.CSRF = getCSRF(client)
+	//todo 心跳包处理
 	return
 }

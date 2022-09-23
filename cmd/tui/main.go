@@ -14,7 +14,7 @@ func main() {
 	if !tui.LoadCookie(client) {
 		logging.Fatalf("Cookie check failed")
 	}
-	room, err := live_room.AuthAndConnect(client, 7570705)
+	room, err := live_room.AuthAndConnect(client, tui.LiveConfig.RoomID)
 	if err != nil {
 		logging.Fatalf("Connect server error, err=%v", err)
 	}

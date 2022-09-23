@@ -5,7 +5,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"os"
 )
 
 var (
@@ -51,8 +50,9 @@ type Logger interface {
 	Fatalf(format string, args ...interface{})
 }
 
-func init() {
-	fileName := os.Getenv("LOGGING_FILE")
+func InitLogConfig() {
+	//fileName := os.Getenv("LOGGING_FILE")
+	fileName := "bililive_tui.log"
 	if len(fileName) > 0 {
 		var err error
 		defaultLogger, flushLogs, err = CreateLoggerAsLocalFile(fileName, defaultLoggingLevel)
