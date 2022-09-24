@@ -133,7 +133,6 @@ var (
 	activeButtonStyle = buttonStyle.Copy().
 				Foreground(lipgloss.Color("#FFF7DB")).
 				Background(lipgloss.Color("#F25D94")).
-				MarginRight(2).
 				Underline(true)
 
 	listStyle = lipgloss.NewStyle().

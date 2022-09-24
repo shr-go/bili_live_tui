@@ -43,15 +43,7 @@ func PrepareEnterRoom(client *http.Client) (room *api.LiveRoom, err error) {
 	if loginModel.quit {
 		os.Exit(0)
 	}
-	if !loginModel.chooseLogin {
-		return live_room.AuthAndConnect(client, LiveConfig.RoomID)
-	}
-	if !live_room.CheckCookieValid(client, loginModel.cookies) {
-		logging.Fatalf("PrepareEnterRoom cookies check failed, program exit")
-		os.Exit(1)
-	}
-	os.WriteFile("COOKIE.DAT", []byte(loginModel.cookies), 0o660)
-	return live_room.AuthAndConnect(client, LiveConfig.RoomID)
+	return loginModel.room, nil
 }
 
 func max(a, b int) int {

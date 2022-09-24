@@ -7,6 +7,7 @@ import (
 	"github.com/shr-go/bili_live_tui/internal/live_room"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -17,12 +18,14 @@ const (
 	loginStepWaitLogin
 	loginStepLoginNeedRefresh
 	loginStepLoginSuccess
+	loginStepDone
 )
 
 type loginModel struct {
 	step        loginStep
 	client      *http.Client
 	loginData   *api.QRCodeLoginData
+	room        *api.LiveRoom
 	cookies     string
 	chooseLogin bool
 	quit        bool
@@ -33,6 +36,7 @@ func newLoginModel(client *http.Client) loginModel {
 		step:        loginStepConfirmLogin,
 		client:      client,
 		loginData:   nil,
+		room:        nil,
 		cookies:     "",
 		chooseLogin: true,
 		quit:        false,
@@ -73,6 +77,23 @@ func (m *loginModel) pollLoginStatus() tea.Msg {
 	return m.step
 }
 
+func (m *loginModel) enterRoom() tea.Msg {
+	if m.chooseLogin {
+		if !live_room.CheckCookieValid(m.client, m.cookies) {
+			logging.Fatalf("PrepareEnterRoom cookies check failed, program exit")
+		}
+		os.WriteFile("COOKIE.DAT", []byte(m.cookies), 0o660)
+	}
+
+	if room, err := live_room.AuthAndConnect(m.client, LiveConfig.RoomID); err != nil {
+		logging.Fatalf("AuthAndConnect failed, err=%v", err)
+	} else {
+		m.room = room
+	}
+	m.step = loginStepDone
+	return m.step
+}
+
 func (m *loginModel) Init() tea.Cmd {
 	return nil
 }
@@ -98,7 +119,8 @@ func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.step = loginStepWaitLogin
 					return m, m.loadLoginData
 				} else {
-					return m, tea.Quit
+					m.step = loginStepLoginSuccess
+					return m, m.enterRoom
 				}
 			}
 		case loginStepLoginNeedRefresh:
@@ -117,6 +139,8 @@ func (m *loginModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg == loginStepWaitLogin {
 			return m, tickEvery()
 		} else if msg == loginStepLoginSuccess {
+			return m, m.enterRoom
+		} else if msg == loginStepDone {
 			return m, tea.Quit
 		}
 	}
@@ -137,7 +161,7 @@ func (m *loginModel) View() string {
 
 		question := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).
 			Render("扫码登陆后才能发送弹幕哦！")
-		buttons := lipgloss.JoinHorizontal(lipgloss.Top, loginButton, cancelButton)
+		buttons := lipgloss.JoinHorizontal(lipgloss.Top, loginButton, "  ", cancelButton)
 		ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
 		dialog := lipgloss.Place(windowWidth, windowHeight,
 			lipgloss.Center, lipgloss.Center,
@@ -169,6 +193,18 @@ func (m *loginModel) View() string {
 			dialogBoxStyle.Render(ui),
 			lipgloss.WithWhitespaceForeground(subtle),
 		)
+	case loginStepLoginSuccess:
+		str := "登陆成功，正在连接服务器"
+		if !m.chooseLogin {
+			str = "以游客身份登录，正在连接服务器"
+		}
+		text := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).Render(str)
+		dialog := lipgloss.Place(windowWidth, windowHeight,
+			lipgloss.Center, lipgloss.Center,
+			dialogBoxStyle.Render(text),
+			lipgloss.WithWhitespaceForeground(subtle),
+		)
+		return dialog
 	}
 	return ""
 }
