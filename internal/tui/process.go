@@ -44,12 +44,12 @@ func processDanmuMsg(msg *api.DanmuMessage) (danmu *danmuMsg) {
 func generateFakeDanmuMsg(content string) (danmu *danmuMsg) {
 	danmu = &danmuMsg{
 		uid:          10000,
-		uName:        "测试弹幕机器人",
+		uName:        "【未登录 这是一条假弹幕】",
 		chatTime:     time.Now(),
 		content:      content,
 		medal:        nil,
-		nameColor:    "",
-		contentColor: "",
+		nameColor:    "#DC143C",
+		contentColor: "#DC143C",
 	}
 	return danmu
 }

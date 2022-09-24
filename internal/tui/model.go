@@ -71,23 +71,30 @@ func InitialModel(room *api.LiveRoom) model {
 }
 
 func (m model) sendDanmu(needSend string) tea.Cmd {
-	danmu := generateDanmuMsg(needSend, m.room)
-	return func() tea.Msg {
-		contentType, form := packDanmuMsgForm(danmu)
-		baseURL := "https://api.live.bilibili.com/msg/send"
-		resp, err := m.room.Client.Post(baseURL, contentType, form)
-		if err != nil {
-			logging.Errorf("Send Danmu failed, err=%v", err)
+	if m.room.RoomUserInfo == nil {
+		danmu := generateFakeDanmuMsg(needSend)
+		return func() tea.Msg {
+			return danmu
+		}
+	} else {
+		danmu := generateDanmuMsg(needSend, m.room)
+		return func() tea.Msg {
+			contentType, form := packDanmuMsgForm(danmu)
+			baseURL := "https://api.live.bilibili.com/msg/send"
+			resp, err := m.room.Client.Post(baseURL, contentType, form)
+			if err != nil {
+				logging.Errorf("Send Danmu failed, err=%v", err)
+				return nil
+			}
+			defer resp.Body.Close()
+			respBody, err := ioutil.ReadAll(resp.Body)
+			var data map[string]interface{}
+			if err = json.Unmarshal(respBody, &data); err != nil || data["code"] != 0 {
+				logging.Errorf("Send Danmu failed, err=%v, data=%v", err, data)
+				return nil
+			}
 			return nil
 		}
-		defer resp.Body.Close()
-		respBody, err := ioutil.ReadAll(resp.Body)
-		var data map[string]interface{}
-		if err = json.Unmarshal(respBody, &data); err != nil || data["code"] != 0 {
-			logging.Errorf("Send Danmu failed, err=%v, data=%v", err, data)
-			return nil
-		}
-		return nil
 	}
 }
 

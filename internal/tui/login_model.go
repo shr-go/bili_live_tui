@@ -7,7 +7,6 @@ import (
 	"github.com/shr-go/bili_live_tui/internal/live_room"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -172,32 +171,4 @@ func (m *loginModel) View() string {
 		)
 	}
 	return ""
-}
-
-func LoadCookie(client *http.Client) bool {
-	if cookieBytes, err := os.ReadFile("COOKIE.DAT"); err == nil {
-		cookies := string(cookieBytes)
-		if live_room.CheckCookieValid(client, cookies) {
-			return true
-		}
-	}
-	loginModel := newLoginModel(client)
-	p := tea.NewProgram(&loginModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
-	if err := p.Start(); err != nil {
-		logging.Fatalf("LoadCookie ui error: %v", err)
-		os.Exit(1)
-	}
-	if loginModel.quit {
-		os.Exit(0)
-	}
-	if !loginModel.chooseLogin {
-		return true
-	}
-	cookies := loginModel.cookies
-	if cookies == "" {
-		logging.Fatalf("LoadCookie failed, program exit")
-		os.Exit(1)
-	}
-	_ = os.WriteFile("COOKIE.DAT", []byte(cookies), 0o660)
-	return live_room.CheckCookieValid(client, cookies)
 }

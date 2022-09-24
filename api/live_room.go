@@ -16,7 +16,7 @@ type LiveRoom struct {
 	StreamConn   net.Conn
 	Title        string
 	ShortID      uint64
-	RoomUserInfo UserRoomProperty
+	RoomUserInfo *UserRoomProperty
 	Client       *http.Client
 	CSRF         string
 }

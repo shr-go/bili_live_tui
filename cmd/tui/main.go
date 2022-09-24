@@ -2,7 +2,6 @@ package main
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/shr-go/bili_live_tui/internal/live_room"
 	"github.com/shr-go/bili_live_tui/internal/tui"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
 	"net/http"
@@ -11,11 +10,8 @@ import (
 
 func main() {
 	client := &http.Client{}
-	if !tui.LoadCookie(client) {
-		logging.Fatalf("Cookie check failed")
-	}
-	room, err := live_room.AuthAndConnect(client, tui.LiveConfig.RoomID)
-	if err != nil {
+	room, err := tui.PrepareEnterRoom(client)
+	if err != nil || room == nil {
 		logging.Fatalf("Connect server error, err=%v", err)
 	}
 	p := tea.NewProgram(tui.InitialModel(room), tea.WithAltScreen(), tea.WithMouseCellMotion())

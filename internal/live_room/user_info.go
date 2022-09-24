@@ -107,7 +107,14 @@ func parseCookieStr(client *http.Client, cookies string) {
 }
 
 func CheckCookieValid(client *http.Client, cookie string) bool {
+	if cookie == "" {
+		return false
+	}
 	parseCookieStr(client, cookie)
+	return CheckAuth(client)
+}
+
+func CheckAuth(client *http.Client) bool {
 	baseURL := "https://account.bilibili.com/site/getCoin"
 	resp, err := client.Get(baseURL)
 	if err != nil {
