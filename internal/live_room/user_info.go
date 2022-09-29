@@ -39,6 +39,7 @@ func QRCodeLogin(client *http.Client) (data *api.QRCodeLoginData, err error) {
 	if err != nil {
 		return
 	}
+	q.WriteFile(256, "login.png")
 	qrStr := q.ToSmallString(false)
 	data = &api.QRCodeLoginData{
 		QRString: qrStr,

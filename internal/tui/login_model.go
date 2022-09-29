@@ -176,7 +176,7 @@ func (m *loginModel) View() string {
 		return dialog
 	case loginStepWaitLogin:
 		if m.loginData != nil {
-			tips := ""
+			tips := "扫描下方的二维码或软件目录内的login.png完成登录"
 			if m.loginData.Status == api.QRLoginNotConfirm {
 				tips = "请在手机上点击确定完成登录"
 			}
