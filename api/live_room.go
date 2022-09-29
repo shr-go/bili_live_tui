@@ -13,6 +13,7 @@ type LiveRoom struct {
 	MessageChan  chan *DanmuMessage
 	ReqChan      chan []byte
 	DoneChan     chan struct{}
+	RetryChan    chan struct{}
 	StreamConn   net.Conn
 	Title        string
 	ShortID      uint64

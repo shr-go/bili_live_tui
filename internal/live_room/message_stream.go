@@ -179,8 +179,7 @@ func GetDanmuInfo(client *http.Client, id uint64) (info *api.DanmuInfoResp, err 
 	return
 }
 
-func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (room *api.LiveRoom, err error) {
-	var conn net.Conn
+func connectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (conn net.Conn, err error) {
 	for _, HostData := range info.Data.HostList {
 		timeout := time.Second
 		conn, err = net.DialTimeout("tcp", net.JoinHostPort(HostData.Host, strconv.Itoa(HostData.Port)), timeout)
@@ -228,6 +227,14 @@ func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (roo
 		err = errors.New("connect server auth failed")
 		return
 	}
+	return
+}
+
+func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (room *api.LiveRoom, err error) {
+	conn, err := connectDanmuServer(uid, roomID, info)
+	if err != nil {
+		return
+	}
 	room = &api.LiveRoom{
 		UID:         uid,
 		RoomID:      roomID,
@@ -236,6 +243,7 @@ func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (roo
 		MessageChan: make(chan *api.DanmuMessage, 10),
 		ReqChan:     make(chan []byte, 10),
 		DoneChan:    make(chan struct{}),
+		RetryChan:   make(chan struct{}),
 		StreamConn:  conn,
 	}
 
@@ -244,6 +252,8 @@ func ConnectDanmuServer(uid uint64, roomID uint64, info *api.DanmuInfoResp) (roo
 
 	// process read
 	go processRead(room)
+
+	go monitorConn(room)
 
 	return
 }
@@ -260,9 +270,12 @@ func processWrite(room *api.LiveRoom) {
 	heartBeatTicker := time.NewTicker(30 * time.Second)
 	defer heartBeatTicker.Stop()
 	dataList := list.New()
+	doneChan := room.DoneChan
 Loop:
 	for {
 		select {
+		case <-doneChan:
+			break Loop
 		case <-heartBeatTicker.C:
 			heartBeatReq(room)
 		case data := <-room.ReqChan:
@@ -270,12 +283,9 @@ Loop:
 				preData := dataList.Front().Value.([]byte)
 				// todo Add timeout settings
 				if _, err := room.StreamConn.Write(preData); err != nil {
-					if err == io.EOF {
-						logging.Errorf("connection close from write")
-						close(room.DoneChan)
+					if err != nil {
+						logging.Errorf("connection close from write, err=%v", err)
 						break Loop
-					} else {
-						break
 					}
 				} else {
 					dataList.Remove(dataList.Front())
@@ -288,29 +298,27 @@ Loop:
 				}
 			}
 			dataList.PushBack(data)
-		case <-room.DoneChan:
-			break Loop
 		}
 	}
-	logging.Debugf("write goroutine quit")
+	logging.Infof("write goroutine quit")
 }
 
 func processRead(room *api.LiveRoom) {
 	var notComplete []byte
+	doneChan := room.DoneChan
 Loop:
 	for {
 		select {
-		case <-room.DoneChan:
+		case <-doneChan:
 			break Loop
 		default:
 			data := make([]byte, 64*1024)
 			// todo Add timeout settings
 			n, err := room.StreamConn.Read(data)
-			if err == io.EOF {
-				logging.Errorf("connection close from read")
+			if err != nil {
+				close(room.RetryChan)
+				logging.Errorf("connection close from read, err=%v", err)
 				break Loop
-			} else if err != nil || n <= 0 {
-				continue
 			}
 			data = data[:n]
 			if len(notComplete) != 0 {
@@ -328,5 +336,35 @@ Loop:
 			}
 		}
 	}
-	logging.Debugf("read goroutine quit")
+	logging.Infof("read goroutine quit")
+}
+
+func monitorConn(room *api.LiveRoom) {
+Loop:
+	for {
+		select {
+		case <-room.DoneChan:
+			break Loop
+		case <-room.RetryChan:
+			logging.Infof("retry connect danmu server")
+			close(room.DoneChan)
+			client := room.Client
+			realRoomID := room.RoomID
+			info, err := GetDanmuInfo(client, realRoomID)
+			if err != nil {
+				logging.Fatalf("retry get danmu info failed, err=%v", err)
+			}
+			conn, err := connectDanmuServer(room.UID, realRoomID, info)
+			if err != nil {
+				logging.Fatalf("retry connect danmu server failed, err=%v", err)
+			}
+			logging.Infof("retry connect danmu server success")
+			room.StreamConn = conn
+			room.DoneChan = make(chan struct{})
+			room.RetryChan = make(chan struct{})
+			go processWrite(room)
+			go processRead(room)
+		}
+	}
+	logging.Infof("monitor goroutine quit")
 }

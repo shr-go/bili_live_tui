@@ -28,13 +28,14 @@ func init() {
 }
 
 func PrepareEnterRoom(client *http.Client) (room *api.LiveRoom, err error) {
+	loginModel := newLoginModel(client)
 	if cookieBytes, err := os.ReadFile("COOKIE.DAT"); err == nil {
 		cookies := string(cookieBytes)
 		if live_room.CheckCookieValid(client, cookies) {
-			return live_room.AuthAndConnect(client, LiveConfig.RoomID)
+			loginModel.step = loginStepLoginSuccess
+			loginModel.localCookie = true
 		}
 	}
-	loginModel := newLoginModel(client)
 	p := tea.NewProgram(&loginModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if err := p.Start(); err != nil {
 		logging.Fatalf("PrepareEnterRoom ui error: %v", err)

@@ -28,6 +28,7 @@ type loginModel struct {
 	room        *api.LiveRoom
 	cookies     string
 	chooseLogin bool
+	localCookie bool
 	quit        bool
 }
 
@@ -39,6 +40,7 @@ func newLoginModel(client *http.Client) loginModel {
 		room:        nil,
 		cookies:     "",
 		chooseLogin: true,
+		localCookie: false,
 		quit:        false,
 	}
 }
@@ -78,7 +80,7 @@ func (m *loginModel) pollLoginStatus() tea.Msg {
 }
 
 func (m *loginModel) enterRoom() tea.Msg {
-	if m.chooseLogin {
+	if m.chooseLogin && !m.localCookie {
 		if !live_room.CheckCookieValid(m.client, m.cookies) {
 			logging.Fatalf("PrepareEnterRoom cookies check failed, program exit")
 		}
@@ -95,6 +97,9 @@ func (m *loginModel) enterRoom() tea.Msg {
 }
 
 func (m *loginModel) Init() tea.Cmd {
+	if m.step == loginStepLoginSuccess {
+		return m.enterRoom
+	}
 	return nil
 }
 

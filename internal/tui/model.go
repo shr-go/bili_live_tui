@@ -89,7 +89,7 @@ func (m model) sendDanmu(needSend string) tea.Cmd {
 			defer resp.Body.Close()
 			respBody, err := ioutil.ReadAll(resp.Body)
 			var data map[string]interface{}
-			if err = json.Unmarshal(respBody, &data); err != nil || data["code"] != 0 {
+			if err = json.Unmarshal(respBody, &data); err != nil || data["code"].(float64) != 0 {
 				logging.Errorf("Send Danmu failed, err=%v, data=%v", err, data)
 				return nil
 			}
