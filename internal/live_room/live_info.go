@@ -39,6 +39,7 @@ func GetRoomInfo(client *http.Client, roomID uint64) (info *api.RoomInfoResp, er
 	return
 }
 
+//GetUserRoomInfo this function trigger user enter room event
 func GetUserRoomInfo(client *http.Client, roomID uint64) (info *api.UserRoomInfo, err error) {
 	roomInfoReq := api.RoomInfoReq{RoomID: roomID}
 	v, err := query.Values(roomInfoReq)
