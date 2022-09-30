@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	logging.Infof("tui start")
 	client := &http.Client{}
 	room, err := tui.PrepareEnterRoom(client)
 	if err != nil || room == nil {

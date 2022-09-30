@@ -61,9 +61,9 @@ func InitLogConfig() {
 		}
 	} else {
 		cfg := zap.NewDevelopmentConfig()
-		cfg.Level = zap.NewAtomicLevelAt(FatalLevel)
+		cfg.Level = zap.NewAtomicLevelAt(defaultLoggingLevel)
 		cfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
-		zapLogger, _ := cfg.Build()
+		zapLogger, _ := cfg.Build(zap.AddCallerSkip(1))
 		defaultLogger = zapLogger.Sugar()
 	}
 }
@@ -104,7 +104,7 @@ func CreateLoggerAsLocalFile(localFilePath string, logLevel Level) (logger Logge
 		return level >= logLevel
 	})
 	core := zapcore.NewCore(encoder, ws, levelEnabler)
-	zapLogger := zap.New(core, zap.AddCaller())
+	zapLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	logger = zapLogger.Sugar()
 	flush = zapLogger.Sync
 	return
