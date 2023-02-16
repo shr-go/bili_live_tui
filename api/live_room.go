@@ -17,6 +17,7 @@ type LiveRoom struct {
 	StreamConn   net.Conn
 	Title        string
 	ShortID      uint64
+	OwnerId      uint64
 	RoomUserInfo *UserRoomProperty
 	Client       *http.Client
 	CSRF         string
@@ -169,9 +170,10 @@ type DanmuMessageHeader struct {
 }
 
 type DanmuMessage struct {
-	Cmd  string                 `json:"cmd"`
-	Info []interface{}          `json:"info"`
-	Data map[string]interface{} `json:"data"`
+	Cmd   string                 `json:"cmd"`
+	Info  []interface{}          `json:"info"`
+	Data  map[string]interface{} `json:"data"`
+	Other map[string]interface{} `json:"-"`
 }
 
 type QRCodeGenerateResp struct {

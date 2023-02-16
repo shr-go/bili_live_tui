@@ -201,10 +201,17 @@ func (m model) View() string {
 
 func ReceiveMsg(program *tea.Program, room *api.LiveRoom) {
 	for msg := range room.MessageChan {
-		if msg.Cmd == "DANMU_MSG" {
+		switch msg.Cmd {
+		case "DANMU_MSG": // 普通弹幕消息
 			if danmu := processDanmuMsg(msg); danmu != nil {
 				program.Send(danmu)
 			}
+		case "INTERACT_WORD": // 普通进场消息
+
+		case "ENTRY_EFFECT": // 特效进场消息 和上面的普通进场消息存在其一
+
+		case "PREPARING": // 直播结束，这里断一下日志
+			logging.Rotate()
 		}
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 var (
 	flushLogs           func() error
+	rotateLogs          func() error
 	defaultLogger       Logger
 	defaultLoggingLevel Level
 )
@@ -55,7 +56,7 @@ func InitLogConfig() {
 	fileName := "bililive_tui.log"
 	if len(fileName) > 0 {
 		var err error
-		defaultLogger, flushLogs, err = CreateLoggerAsLocalFile(fileName, defaultLoggingLevel)
+		defaultLogger, flushLogs, rotateLogs, err = CreateLoggerAsLocalFile(fileName, defaultLoggingLevel)
 		if err != nil {
 			panic("invalid LOGGING_FILE, " + err.Error())
 		}
@@ -83,17 +84,15 @@ func LogLevel() string {
 	return defaultLoggingLevel.String()
 }
 
-func CreateLoggerAsLocalFile(localFilePath string, logLevel Level) (logger Logger, flush func() error, err error) {
+func CreateLoggerAsLocalFile(localFilePath string, logLevel Level) (logger Logger, flush func() error, rotate func() error, err error) {
 	if len(localFilePath) == 0 {
-		return nil, nil, errors.New("invalid local logger path")
+		return nil, nil, nil, errors.New("invalid local logger path")
 	}
 
 	// lumberjack.Logger is already safe for concurrent use, so we don't need to lock it.
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   localFilePath,
-		MaxSize:    100, // megabytes
-		MaxBackups: 2,
-		MaxAge:     15, // days
+		Filename: localFilePath,
+		MaxSize:  100, // megabytes
 	}
 
 	encoder := getEncoder()
@@ -107,12 +106,19 @@ func CreateLoggerAsLocalFile(localFilePath string, logLevel Level) (logger Logge
 	zapLogger := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 	logger = zapLogger.Sugar()
 	flush = zapLogger.Sync
+	rotate = lumberJackLogger.Rotate
 	return
 }
 
 func Cleanup() {
 	if flushLogs != nil {
 		_ = flushLogs()
+	}
+}
+
+func Rotate() {
+	if rotateLogs != nil {
+		_ = rotateLogs()
 	}
 }
 

@@ -32,6 +32,7 @@ func AuthAndConnect(client *http.Client, roomID uint64) (room *api.LiveRoom, err
 	}
 	room.Title = roomInfo.Data.Title
 	room.ShortID = uint64(roomInfo.Data.ShortId)
+	room.OwnerId = uint64(roomInfo.Data.Uid)
 	room.Client = client
 
 	if CheckAuth(client) {
