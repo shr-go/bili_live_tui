@@ -1,11 +1,22 @@
 package tui
 
 import (
-	"github.com/charmbracelet/lipgloss"
 	"strconv"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 var (
+	getColor = func(color string, overrideAsBlack ...bool) lipgloss.Color {
+		if !LiveConfig.ColorMode {
+			if len(overrideAsBlack) > 0 && overrideAsBlack[0] {
+				return lipgloss.Color("#3C3C3C")
+			}
+			return lipgloss.Color("#FAFAFA")
+		}
+		return lipgloss.Color(color)
+	}
+
 	shipLevelToString = map[uint8]string{
 		0: "",
 		1: "总",
@@ -16,22 +27,35 @@ var (
 		shipString := shipLevelToString[medal.shipLevel]
 		if shipString != "" {
 			shipString = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#F87299")).
+				Foreground(getColor("#F87299")).
 				Render(shipString)
 		}
 		nameString := lipgloss.NewStyle().
 			MaxWidth(10).
 			Align(lipgloss.Center).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color(medal.medalColor)).
+			Foreground(getColor("#FAFAFA")).
+			Background(getColor(medal.medalColor, true)).
 			Render(medal.name)
 		levelString := lipgloss.NewStyle().
 			Width(2).
 			Align(lipgloss.Right).
-			Foreground(lipgloss.Color("#3C3C3C")).
-			Background(lipgloss.Color("#FAFAFA")).
+			Foreground(getColor("#3C3C3C")).
+			Background(getColor("#FAFAFA", true)).
 			Render(strconv.Itoa(int(medal.level)))
-		return shipString + nameString + levelString
+		if !LiveConfig.ShowMedalLevel {
+			levelString = ""
+		}
+		if !LiveConfig.ShowMedalName {
+			nameString = ""
+		}
+		if !LiveConfig.ShowShipLevel {
+			shipString = ""
+		}
+		if LiveConfig.ShowMedalLevel || LiveConfig.ShowMedalName || LiveConfig.ShowShipLevel {
+			return shipString + nameString + levelString + " "
+		} else {
+			return shipString + nameString + levelString
+		}
 	}
 
 	nameStyle = func(name string, nameColor string) string {
@@ -39,7 +63,7 @@ var (
 			nameColor = "#FAFAFA"
 		}
 		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color(nameColor)).
+			Foreground(getColor(nameColor)).
 			Render(name + ":")
 	}
 
@@ -48,7 +72,7 @@ var (
 			contentColor = "#FAFAFA"
 		}
 		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color(contentColor)).
+			Foreground(getColor(contentColor)).
 			Render(content)
 	}
 )
@@ -105,7 +129,7 @@ var (
 			MarginRight(5).
 			Padding(0, 1).
 			Italic(true).
-			Foreground(lipgloss.Color("#FFF7DB")).
+			Foreground(getColor("#FFF7DB")).
 			SetString("Lip Gloss")
 
 	descStyle = lipgloss.NewStyle().MarginTop(1)
@@ -117,7 +141,7 @@ var (
 
 	dialogBoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#874BFD")).
+			BorderForeground(getColor("#874BFD")).
 			Padding(1, 0).
 			BorderTop(true).
 			BorderLeft(true).
@@ -125,14 +149,14 @@ var (
 			BorderBottom(true)
 
 	buttonStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFF7DB")).
-			Background(lipgloss.Color("#888B7E")).
+			Foreground(getColor("#FFF7DB")).
+			Background(getColor("#888B7E")).
 			Padding(0, 3).
 			MarginTop(1)
 
 	activeButtonStyle = buttonStyle.Copy().
-				Foreground(lipgloss.Color("#FFF7DB")).
-				Background(lipgloss.Color("#F25D94")).
+				Foreground(getColor("#FFF7DB")).
+				Background(getColor("#F25D94")).
 				Underline(true)
 
 	listStyle = lipgloss.NewStyle().
@@ -162,7 +186,7 @@ var (
 	}
 
 	statusNugget = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFDF5")).
+			Foreground(getColor("#FFFDF5")).
 			Padding(0, 1)
 
 	statusBarStyle = lipgloss.NewStyle().
@@ -171,18 +195,18 @@ var (
 
 	statusStyle = lipgloss.NewStyle().
 			Inherit(statusBarStyle).
-			Foreground(lipgloss.Color("#FFFDF5")).
-			Background(lipgloss.Color("#FF5F87")).
+			Foreground(getColor("#FFFDF5")).
+			Background(getColor("#FF5F87")).
 			Padding(0, 1).
 			MarginRight(1)
 
 	encodingStyle = statusNugget.Copy().
-			Background(lipgloss.Color("#A550DF")).
+			Background(getColor("#A550DF")).
 			Align(lipgloss.Right)
 
 	statusText = lipgloss.NewStyle().Inherit(statusBarStyle)
 
-	fishCakeStyle = statusNugget.Copy().Background(lipgloss.Color("#6124DF"))
+	fishCakeStyle = statusNugget.Copy().Background(getColor("#6124DF"))
 
 	// Page.
 
@@ -190,7 +214,7 @@ var (
 
 	focusedStyle = lipgloss.NewStyle().
 			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("69"))
+			BorderForeground(getColor("69"))
 
 	unFocusedStyle = lipgloss.NewStyle().
 			BorderStyle(lipgloss.HiddenBorder())
