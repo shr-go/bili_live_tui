@@ -1,2 +1,8 @@
 room_id = 7777
 chat_buffer = 200
+show_room_title = false
+show_room_number = false
+color_mode = false
+show_ship_level = false
+show_medal_name = false
+show_medal_level = false

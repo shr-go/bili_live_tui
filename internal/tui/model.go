@@ -4,19 +4,19 @@ import (
 	"container/list"
 	"encoding/json"
 	"fmt"
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/shr-go/bili_live_tui/api"
-	"github.com/shr-go/bili_live_tui/pkg/logging"
-	"golang.org/x/term"
 	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/shr-go/bili_live_tui/api"
+	"github.com/shr-go/bili_live_tui/pkg/logging"
+	"golang.org/x/term"
 )
 
 type sessionState uint
@@ -242,7 +242,25 @@ func (m model) headerView() string {
 	if roomID == 0 {
 		roomID = m.room.RoomID
 	}
-	header := fmt.Sprintf("%s - %d(%d)", m.room.Title, roomID, m.room.Hot)
+
+	if !LiveConfig.ShowRoomTitle && !LiveConfig.ShowRoomNumber {
+		return ""
+	}
+
+	var header string
+	// 热度好像已经没有了，先去掉了
+	if LiveConfig.ShowRoomTitle {
+		if LiveConfig.ShowRoomNumber {
+			header = fmt.Sprintf("%s - %d", m.room.Title, roomID)
+		} else {
+			header = fmt.Sprintf(m.room.Title)
+		}
+	} else {
+		if LiveConfig.ShowRoomNumber {
+			header = fmt.Sprintf("%d", roomID)
+		}
+	}
+
 	title := lipgloss.NewStyle().BorderStyle(b).Padding(0, 1).
 		Render(header)
 	line := strings.Repeat("─", max(0, m.viewport.Width-lipgloss.Width(title)))
@@ -266,7 +284,6 @@ func (m model) renderDanmu() string {
 		if ok {
 			if danmu.medal != nil {
 				sb.WriteString(medalStyle(danmu.medal))
-				sb.WriteRune(' ')
 			}
 			sb.WriteString(fmt.Sprintln(nameStyle(danmu.uName, danmu.nameColor),
 				contentStyle(danmu.content, danmu.contentColor)))
