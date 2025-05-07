@@ -4,13 +4,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/shr-go/bili_live_tui/internal/tui"
 	"github.com/shr-go/bili_live_tui/pkg/logging"
-	"net/http"
 	"os"
 )
 
 func main() {
 	logging.Infof("tui start")
-	client := &http.Client{}
+	client := tui.GetCustomHttpClient()
 	room, err := tui.PrepareEnterRoom(client)
 	if err != nil || room == nil {
 		logging.Fatalf("Connect server error, err=%v", err)
